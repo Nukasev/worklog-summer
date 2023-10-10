@@ -8,26 +8,29 @@
     // TODO: lounaan huomiointi
 
     const rows = inputText.split("\n");
+    const space = " ";
+    const consecutiveWhitespaceRegex = /\s{2,}/;
 
-    const nonEmptyRows = rows
-      .filter((row) => row.length > 0)
-      .map((row) => row.trim());
+    const cleanedRows = rows
+      // Remove leading/trailing whitespace
+      .map((row) => row.trim())
+      // Shrink consecutive whitespace characters to spaces
+      .map((row) => row.replace(consecutiveWhitespaceRegex, space))
+      // Only nonempty rows
+      .filter((row) => row.length > 0);
+
     // TODO: jonkinlainen check sille, että aikaväleissä ei ole gappeja eikä päällekkäisyyksiä
-    // - gapit voi täyttää ja huomioita outputissa että herää pahvi
+    // - gapit voi täyttää ja huomioida outputissa että herää pahvi
 
-    const outputRows: string[] = []
-
-    //TODO: shrink consecutive whitespaces
+    const outputRows: string[] = [];
 
     type sumsDictType = { [key: string]: number };
     let minuteSums: sumsDictType = {};
 
-    // Note the extra to force at least one occurrence.
     // TODO: only split by the first space to allow whitespace in the key
-    let rowSplitRegex = /\s\s*/;
 
-    for (const currentRow of nonEmptyRows) {
-      const split = currentRow.split(rowSplitRegex);
+    for (const currentRow of cleanedRows) {
+      const split = currentRow.split(space);
 
       if (split.length !== 2) {
         //TODO: error handling
@@ -37,15 +40,15 @@
 
       const timeStringSplit = timeString.split("-");
 
-      if (timeStringSplit.length !== 2){
+      if (timeStringSplit.length !== 2) {
         //TODO: error handling
       }
-      
-      //TODO: aikojen splittaus fiksummin/more DRY
-      const startTime= timeStringSplit[0]
-      const startTimeSplit= startTime.split(':')
 
-      if (startTimeSplit.length !== 2){
+      //TODO: aikojen splittaus fiksummin/more DRY
+      const startTime = timeStringSplit[0];
+      const startTimeSplit = startTime.split(":");
+
+      if (startTimeSplit.length !== 2) {
         //TODO: error handling
       }
 
