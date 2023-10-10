@@ -6,7 +6,6 @@
 
   const processInput = () => {
     // TODO: lounaan huomiointi
-    // TODO: testboxeille korkeutta lisää
 
     const rows = inputText.split("\n");
 
@@ -120,7 +119,7 @@
   textarea {
     min-width: 600px;
     width: 100%;
-    height: 200px;
+    height: 350px;
     resize: none;
   }
 </style>
