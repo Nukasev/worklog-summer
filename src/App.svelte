@@ -27,17 +27,9 @@
     type sumsDictType = { [key: string]: number };
     let minuteSums: sumsDictType = {};
 
-    // TODO: only split by the first space to allow whitespace in the key
-
     for (const currentRow of cleanedRows) {
-      const split = currentRow.split(space);
-
-      if (split.length !== 2) {
-        //TODO: error handling
-      }
-
-      const timeString = split[0];
-
+      const indexOfFirstSpace = currentRow.indexOf(space);
+      const timeString = currentRow.substring(0, indexOfFirstSpace);
       const timeStringSplit = timeString.split("-");
 
       if (timeStringSplit.length !== 2) {
@@ -75,7 +67,7 @@
         //TODO: error handling
       }
 
-      const key: string = split[1];
+      const key: string = currentRow.substring(indexOfFirstSpace + 1);
 
       if (!(key in minuteSums)) {
         minuteSums[key] = 0;
