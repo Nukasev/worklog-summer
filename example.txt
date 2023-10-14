@@ -1,5 +1,7 @@
 
 
+Valid hours:
+
       8:18-9:00       aamujumppa
 9:00-9:30        palaveri              
           9:30-12:00 röitä
@@ -9,4 +11,15 @@
           15:30-16:00 röitä
 16:00-16:30 palaveri
 
+Hours with gaps:
 
+      8:18-9:00       aamujumppa
+9:00-9:30        palaveri              
+          9:30-11:30 röitä
+    12:00-12:30 lounas
+    12:30-15:00 röitä
+15:00-15:30 tuotanto     rikki
+          15:30-16:00 röitä
+16:00-16:30 palaveri
+
+Hours with overlaps: TODO

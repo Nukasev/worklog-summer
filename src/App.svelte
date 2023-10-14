@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { minutesToTimeString } from "./lib/utils";
+  import {
+    MinuteSums,
+    buildOutputRowString,
+    minutesToTimeString,
+  } from "./lib/utils";
 
   let inputText: string = "Place input here.";
   let outputText: string = "Output will appear here.";
@@ -8,6 +12,10 @@
     const rows = inputText.split("\n");
     const space = " ";
     const consecutiveWhitespaceRegex = /\s{2,}/;
+    const gapKey = "GAP";
+
+    let hasGaps = false;
+    let hasOverlaps = false;
 
     const cleanedRows = rows
       // Remove leading/trailing whitespace
@@ -17,13 +25,12 @@
       // Only nonempty rows
       .filter((row) => row.length > 0);
 
-    // TODO: jonkinlainen check sille, että aikaväleissä ei ole gappeja eikä päällekkäisyyksiä
-    // - gapit voi täyttää ja huomioida outputissa että herää pahvi
-
     const outputRows: string[] = [];
 
-    type sumsDictType = { [key: string]: number };
-    let minuteSums: sumsDictType = {};
+    let minuteSums = new MinuteSums();
+
+    // Used to validate that the time ranges have no gaps/overlaps.
+    let previousEndTimeInMinutes = null;
 
     for (const currentRow of cleanedRows) {
       const indexOfFirstSpace = currentRow.indexOf(space);
@@ -44,6 +51,7 @@
 
       const startTimeHours = parseInt(startTimeSplit[0]);
       const startTimeMinutes = parseInt(startTimeSplit[1]);
+      const startTimeInMinutes = startTimeHours * 60 + startTimeMinutes;
 
       const endTime = timeStringSplit[1];
       const endTimeSplit = endTime.split(":");
@@ -54,12 +62,41 @@
 
       const endTimeHours = parseInt(endTimeSplit[0]);
       const endTimeMinutes = parseInt(endTimeSplit[1]);
+      const endTimeInMinutes = endTimeHours * 60 + endTimeMinutes;
 
-      const durationInMinutes =
-        endTimeHours * 60 +
-        endTimeMinutes -
-        startTimeHours * 60 -
-        startTimeMinutes;
+      let hasGap = false;
+      let hasOverlap = false;
+
+      // Do not run validation of consecutive intervals on first iteration.
+      if (previousEndTimeInMinutes !== null) {
+        hasOverlap = startTimeInMinutes < previousEndTimeInMinutes;
+        hasGap = startTimeInMinutes > previousEndTimeInMinutes;
+
+        if (hasOverlap) {
+          hasOverlaps = true;
+          // TODO: error handling
+        } else if (hasGap) {
+          hasGaps = true;
+          // Generate a gap row that is added in the output rows
+          // between the previous row and the current row.
+          const gapDuration = startTimeInMinutes - previousEndTimeInMinutes;
+          minuteSums.addMinutes(gapKey, gapDuration);
+          const gapRow = `${minutesToTimeString(
+            previousEndTimeInMinutes
+          )}-${minutesToTimeString(startTimeInMinutes)} ${gapKey}`;
+          const gapRowOutput = buildOutputRowString(
+            gapRow,
+            gapKey,
+            gapDuration,
+            minuteSums
+          );
+          outputRows.push(gapRowOutput);
+        }
+      }
+
+      previousEndTimeInMinutes = endTimeInMinutes;
+
+      const durationInMinutes = endTimeInMinutes - startTimeInMinutes;
 
       if (durationInMinutes < 0) {
         //TODO: error handling
@@ -67,41 +104,23 @@
 
       const key: string = currentRow.substring(indexOfFirstSpace + 1);
 
-      if (!(key in minuteSums)) {
-        minuteSums[key] = 0;
-      }
+      minuteSums.addMinutes(key, durationInMinutes);
 
-      minuteSums[key] += durationInMinutes;
+      const rowOutput = buildOutputRowString(
+        currentRow,
+        key,
+        durationInMinutes,
+        minuteSums
+      );
 
-      const rowOutput = `${currentRow} DURATION: ${minutesToTimeString(
-        durationInMinutes
-      )} CUMULATIVE: ${minutesToTimeString(minuteSums[key])}`;
       outputRows.push(rowOutput);
     }
 
-    const sumRows: string[] = [];
-    const lunchKeys: string[] = ["lounas", "lunch"];
-
-    let totalMinutes: number = 0;
-    let lunchlessMinutes: number = 0;
-
-    for (const currentKey in minuteSums) {
-      const minutesForKey = minuteSums[currentKey];
-      const sumRow = `${currentKey}: ${minutesToTimeString(minutesForKey)}`;
-
-      sumRows.push(sumRow);
-      totalMinutes += minutesForKey;
-
-      if (!lunchKeys.includes(currentKey)) {
-        lunchlessMinutes += minutesForKey;
-      }
-    }
-
-    outputText = `${outputRows.join("\n")}\n\nTOTALS:\n${sumRows.join(
-      "\n"
-    )}\n\nTOTAL TIME: ${minutesToTimeString(
-      lunchlessMinutes
-    )}\nWITH LUNCH: ${minutesToTimeString(totalMinutes)}`;
+    outputText = `${outputRows.join("\n")}\n\nTOTALS:\n${minuteSums
+      .getSumRows()
+      .join("\n")}\n\nTOTAL TIME: ${minutesToTimeString(
+      minuteSums.getLunchlessMinutes()
+    )}\nWITH LUNCH: ${minutesToTimeString(minuteSums.getTotalMinutes())}`;
   };
 </script>
 
