@@ -5,8 +5,6 @@
   let outputText: string = "Output will appear here.";
 
   const processInput = () => {
-    // TODO: lounaan huomiointi
-
     const rows = inputText.split("\n");
     const space = " ";
     const consecutiveWhitespaceRegex = /\s{2,}/;
@@ -82,17 +80,28 @@
     }
 
     const sumRows: string[] = [];
+    const lunchKeys: string[] = ["lounas", "lunch"];
+
     let totalMinutes: number = 0;
+    let lunchlessMinutes: number = 0;
+
     for (const currentKey in minuteSums) {
       const minutesForKey = minuteSums[currentKey];
       const sumRow = `${currentKey}: ${minutesToTimeString(minutesForKey)}`;
+
       sumRows.push(sumRow);
       totalMinutes += minutesForKey;
+
+      if (!lunchKeys.includes(currentKey)) {
+        lunchlessMinutes += minutesForKey;
+      }
     }
 
     outputText = `${outputRows.join("\n")}\n\nTOTALS:\n${sumRows.join(
       "\n"
-    )}\n\nTOTAL TIME: ${minutesToTimeString(totalMinutes)}`;
+    )}\n\nTOTAL TIME: ${minutesToTimeString(
+      lunchlessMinutes
+    )}\nWITH LUNCH: ${minutesToTimeString(totalMinutes)}`;
   };
 </script>
 
