@@ -3,6 +3,7 @@
     MinuteSums,
     buildOutputRowString,
     minutesToTimeString,
+    timeStringToMinutes,
   } from "./lib/utils";
 
   let inputText: string = "Place input here.";
@@ -41,28 +42,11 @@
         //TODO: error handling
       }
 
-      //TODO: aikojen splittaus fiksummin/more DRY
       const startTime = timeStringSplit[0];
-      const startTimeSplit = startTime.split(":");
-
-      if (startTimeSplit.length !== 2) {
-        //TODO: error handling
-      }
-
-      const startTimeHours = parseInt(startTimeSplit[0]);
-      const startTimeMinutes = parseInt(startTimeSplit[1]);
-      const startTimeInMinutes = startTimeHours * 60 + startTimeMinutes;
+      const startTimeInMinutes = timeStringToMinutes(startTime);
 
       const endTime = timeStringSplit[1];
-      const endTimeSplit = endTime.split(":");
-
-      if (endTimeSplit.length !== 2) {
-        //TODO: error handling
-      }
-
-      const endTimeHours = parseInt(endTimeSplit[0]);
-      const endTimeMinutes = parseInt(endTimeSplit[1]);
-      const endTimeInMinutes = endTimeHours * 60 + endTimeMinutes;
+      const endTimeInMinutes = timeStringToMinutes(endTime);
 
       let hasGap = false;
       let hasOverlap = false;

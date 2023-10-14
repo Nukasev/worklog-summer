@@ -9,6 +9,20 @@ export const minutesToTimeString = (minutes: number) => {
   return `${durationHours}:${leadingZeroPrefix}${durationMinutes}`;
 };
 
+export const timeStringToMinutes = (timeString: string) => {
+  const timeSplit = timeString.split(":");
+
+  if (timeSplit.length !== 2) {
+    //TODO: error handling
+  }
+
+  const hours = parseInt(timeSplit[0]);
+  const minutes = parseInt(timeSplit[1]);
+  const durationInMinutes = hours * 60 + minutes;
+
+  return durationInMinutes;
+};
+
 export const buildOutputRowString = (
   row: string,
   key: string,
