@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Instructions from "./Instructions.svelte";
   import { InputProcessor } from "./lib/InputProcessor";
 
   let inputText: string = "Place input here.";
@@ -11,8 +12,10 @@
 </script>
 
 <main>
+  <Instructions />
+
   <div id="input-area">
-    <textarea bind:value={inputText} />
+    <textarea id="input-textarea" bind:value={inputText} />
   </div>
 
   <div class="card">
@@ -20,7 +23,7 @@
   </div>
 
   <div id="output-area">
-    <textarea bind:value={outputText} />
+    <textarea id="output-textarea" bind:value={outputText} />
   </div>
 </main>
 
@@ -28,7 +31,12 @@
   textarea {
     min-width: 900px;
     width: 100%;
-    height: 350px;
     resize: none;
+  }
+  #input-textarea {
+    height: 250px;
+  }
+  #output-textarea {
+    height: 350px;
   }
 </style>
