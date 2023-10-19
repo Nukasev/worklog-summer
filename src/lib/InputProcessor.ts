@@ -6,6 +6,7 @@ export class InputProcessor {
   #rows: string[];
   #minuteSums: MinuteSums = new MinuteSums();
   #outputRows: string[] = [];
+  #hasErrors: boolean = false;
 
   constructor(inputText: string) {
     this.#rows = inputText.split("\n");
@@ -30,51 +31,59 @@ export class InputProcessor {
   _buildOutputRows = (cleanedRows: string[]): string[] => {
     const gapKey = "GAP";
 
-    let hasGaps = false;
-    let hasOverlaps = false;
-
     // Used to validate that the time ranges have no gaps/overlaps.
     let previousEndTimeInMinutes: number | null = null;
 
     for (const currentRow of cleanedRows) {
       let parsed = new ParsedRow(currentRow);
 
+      if (parsed.error !== null) {
+        // _insertRow() can handle the errors; the loop should NOT be continued.
+        this._insertRow(parsed);
+        this.#hasErrors = true;
+        break;
+      }
+
+      /**
+       * NOTE: The type casts here are a legitimate code smell
+       * (implying a TODO of eradication),
+       * but non-null error-field ensures that
+       * the actual data fields are not null.
+       */
+
       // Shorthand to avoid repeated access
-      const startTimeInMinutes = parsed.startTimeInMinutes;
+      const startTimeInMinutes = parsed.startTimeInMinutes as number;
 
       let hasGap = false;
       let hasOverlap = false;
 
       // Do not run validation of consecutive intervals on first iteration.
       if (previousEndTimeInMinutes !== null) {
+        const startTimeString = minutesToTimeString(startTimeInMinutes);
+        const previousEndTimeString = minutesToTimeString(
+          previousEndTimeInMinutes
+        );
         hasOverlap = startTimeInMinutes < previousEndTimeInMinutes;
         hasGap = startTimeInMinutes > previousEndTimeInMinutes;
 
         if (hasOverlap) {
-          hasOverlaps = true;
-
           // We assume that the error is in the current start time, fix that and
           // inform the user in the output.
-          const overlapReplacedMessage = `NOTE: STARTING TIME CHANGED FROM ${minutesToTimeString(
-            parsed.startTimeInMinutes
-          )} TO ${minutesToTimeString(
-            previousEndTimeInMinutes
-          )} DUE TO OVERLAPS`;
 
-          const fixedRow = `${minutesToTimeString(
-            previousEndTimeInMinutes
-          )}-${minutesToTimeString(parsed.endTimeInMinutes)} ${parsed.key}`;
+          const overlapReplacedMessage = `NOTE: STARTING TIME CHANGED FROM ${startTimeString} TO ${previousEndTimeString} DUE TO OVERLAPS`;
+          const endTimeString = minutesToTimeString(
+            parsed.endTimeInMinutes as number
+          );
+
+          const fixedRow = `${previousEndTimeString}-${endTimeString} ${parsed.key}`;
 
           // Override parsed so we can _insertRow() as usual.
           parsed = new ParsedRow(fixedRow);
           parsed.note = overlapReplacedMessage;
         } else if (hasGap) {
-          hasGaps = true;
           // Generate a gap row that is added in the output rows
           // between the previous row and the current row.
-          const gapRow = `${minutesToTimeString(
-            previousEndTimeInMinutes
-          )}-${minutesToTimeString(startTimeInMinutes)} ${gapKey}`;
+          const gapRow = `${previousEndTimeString}-${startTimeString} ${gapKey}`;
 
           const parsedGap = new ParsedRow(gapRow);
 
@@ -95,7 +104,9 @@ export class InputProcessor {
    *
    */
   _insertRow = (parsed: ParsedRow): void => {
-    this.#minuteSums.addMinutes(parsed.key, parsed.durationInMinutes);
+    if (parsed.key !== null && parsed.durationInMinutes !== null) {
+      this.#minuteSums.addMinutes(parsed.key, parsed.durationInMinutes);
+    }
 
     const rowOutput = this._buildOutputRowString(parsed);
 
@@ -103,12 +114,22 @@ export class InputProcessor {
   };
 
   _buildOutputRowString = (parsed: ParsedRow): string => {
+    if (parsed.error !== null) {
+      return parsed.error;
+    }
+    /**
+     * NOTE: The type casts here are a legitimate code smell
+     * (implying a TODO of eradication),
+     * but non-null error-field ensures that
+     * the actual data fields are not null.
+     */
+
     const durationString = `DURATION: ${minutesToTimeString(
-      parsed.durationInMinutes
+      parsed.durationInMinutes as number
     )}`;
 
     const cumulativeString = `CUMULATIVE: ${minutesToTimeString(
-      this.#minuteSums.get(parsed.key)
+      this.#minuteSums.get(parsed.key as string)
     )}`;
 
     const baseString = `${parsed.row} ${durationString} ${cumulativeString}`;
@@ -129,7 +150,12 @@ export class InputProcessor {
       this.#minuteSums.getTotalMinutes()
     )}`;
 
-    const outputText = `${joinedOutputRows}\n\n\n${totalsString}\n\n${lunchlessTotalString}\n${totalString}`;
+    const allTotalsString = `\n\n\n${totalsString}\n\n${lunchlessTotalString}\n${totalString}`;
+
+    // Do not display any totals if there are any parsing errors.
+    const totalsSuffix = this.#hasErrors ? "" : allTotalsString;
+
+    const outputText = `${joinedOutputRows}${totalsSuffix}`;
 
     return outputText;
   };

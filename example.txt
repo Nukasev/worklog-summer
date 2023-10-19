@@ -11,6 +11,8 @@ Valid hours:
           15:30-16:00 röitä
 16:00-16:30 palaveri
 
+----------------------------------------------------
+
 Hours with gaps:
 
       8:18-9:00       aamujumppa
@@ -22,6 +24,8 @@ Hours with gaps:
           15:30-16:00 röitä
 16:00-16:30 palaveri
 
+----------------------------------------------------
+
 Hours with overlaps:
 
       8:18-9:00       aamujumppa
@@ -32,3 +36,24 @@ Hours with overlaps:
 15:00-15:30 tuotanto     rikki
           15:30-16:00 röitä
 16:00-16:30 palaveri
+
+----------------------------------------------------
+
+Hours with missing whitespace:
+
+8:00-8:18 filler-episodi
+8:18-9:00aamujumppa
+
+----------------------------------------------------
+
+Hours with multiple dashes:
+
+8:00-8:18 filler-episodi
+8:18--9:00 aamujumppa
+
+----------------------------------------------------
+
+Hours with invalid order:
+
+8:00-8:18 filler-episodi
+9:00-8:18 aamujumppa
