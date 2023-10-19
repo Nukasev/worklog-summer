@@ -33,14 +33,14 @@ export class InputProcessor {
     return outputText;
   };
 
-  _buildOutputRows = (cleanedRows: string[]) => {
+  _buildOutputRows = (cleanedRows: string[]): string[] => {
     const gapKey = "GAP";
 
     let hasGaps = false;
     let hasOverlaps = false;
 
     // Used to validate that the time ranges have no gaps/overlaps.
-    let previousEndTimeInMinutes = null;
+    let previousEndTimeInMinutes: number | null = null;
 
     for (const currentRow of cleanedRows) {
       const parsed = new ParsedRow(currentRow);
@@ -85,7 +85,7 @@ export class InputProcessor {
    * "Consumes" the row to update minuteSums and outputRows
    *
    */
-  _insertRow = (parsed: ParsedRow) => {
+  _insertRow = (parsed: ParsedRow): void => {
     this.#minuteSums.addMinutes(parsed.key, parsed.durationInMinutes);
 
     const rowOutput = this._buildOutputRowString(parsed);
@@ -93,7 +93,7 @@ export class InputProcessor {
     this.#outputRows.push(rowOutput);
   };
 
-  _buildOutputRowString = (parsed: ParsedRow) => {
+  _buildOutputRowString = (parsed: ParsedRow): string => {
     return `${parsed.row} DURATION: ${minutesToTimeString(
       parsed.durationInMinutes
     )} CUMULATIVE: ${minutesToTimeString(this.#minuteSums.get(parsed.key))}`;

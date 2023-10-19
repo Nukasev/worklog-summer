@@ -4,7 +4,7 @@
   let inputText: string = "Place input here.";
   let outputText: string = "Output will appear here.";
 
-  const processInput = () => {
+  const processInput = (): void => {
     const inputProcessor = new InputProcessor(inputText);
     outputText = inputProcessor.process();
   };

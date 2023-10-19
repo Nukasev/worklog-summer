@@ -9,7 +9,7 @@ export class MinuteSums {
   #lunchlessMinutes: number = 0;
   #totalMinutes: number = 0;
 
-  addMinutes(key: string, durationInMinutes: number) {
+  addMinutes(key: string, durationInMinutes: number): void {
     if (!(key in this.#data)) {
       this.#data[key] = 0;
     }
@@ -17,7 +17,7 @@ export class MinuteSums {
     this.#data[key] += durationInMinutes;
   }
 
-  get(key: string) {
+  get(key: string): number {
     return this.#data[key];
   }
 
@@ -25,7 +25,7 @@ export class MinuteSums {
    * Check whether the sums/totals have been built and builds them if not, then sets them as built.
    * Done in single method to keep things DRY.
    */
-  _buildSums() {
+  _buildSums(): void {
     if (this.#sumsBuilt) {
       return;
     }
@@ -47,17 +47,17 @@ export class MinuteSums {
     this.#sumsBuilt = true;
   }
 
-  getSumRows() {
+  getSumRows(): string[] {
     this._buildSums();
     return this.#sumRows;
   }
 
-  getTotalMinutes() {
+  getTotalMinutes(): number {
     this._buildSums();
     return this.#totalMinutes;
   }
 
-  getLunchlessMinutes() {
+  getLunchlessMinutes(): number {
     this._buildSums();
     return this.#lunchlessMinutes;
   }

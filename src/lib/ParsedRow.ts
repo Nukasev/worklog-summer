@@ -1,4 +1,4 @@
-import { space, timeStringToMinutes } from "./utils";
+import { space, timeStringToMinutes, type timeString } from "./utils";
 
 export class ParsedRow {
   row: string;
@@ -10,18 +10,29 @@ export class ParsedRow {
   constructor(row: string) {
     this.row = row;
     const indexOfFirstSpace = row.indexOf(space);
-    this.key = row.substring(indexOfFirstSpace + 1);
-    const timeString = row.substring(0, indexOfFirstSpace);
-    const timeStringSplit = timeString.split("-");
 
-    if (timeStringSplit.length !== 2) {
+    if (indexOfFirstSpace === -1) {
       //TODO: error handling
     }
 
-    const startTime = timeStringSplit[0];
+    this.key = row.substring(indexOfFirstSpace + 1);
+    const durationString = row.substring(0, indexOfFirstSpace);
+    const durationStringSplit = durationString.split("-");
+
+    if (durationStringSplit.length !== 2) {
+      //TODO: error handling
+    }
+    if (durationStringSplit[0]) {
+      //TODO: error handling
+    }
+    if (durationStringSplit[1]) {
+      //TODO: error handling
+    }
+
+    const startTime = durationStringSplit[0] as timeString;
     this.startTimeInMinutes = timeStringToMinutes(startTime);
 
-    const endTime = timeStringSplit[1];
+    const endTime = durationStringSplit[1] as timeString;
     this.endTimeInMinutes = timeStringToMinutes(endTime);
 
     this.durationInMinutes = this.endTimeInMinutes - this.startTimeInMinutes;
