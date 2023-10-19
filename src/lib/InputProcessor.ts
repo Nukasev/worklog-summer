@@ -7,6 +7,7 @@ export class InputProcessor {
   #minuteSums: MinuteSums = new MinuteSums();
   #outputRows: string[] = [];
   #hasErrors: boolean = false;
+  #previousEndTimeInMinutes: number | null = null;
 
   constructor(inputText: string) {
     this.#rows = inputText.split("\n");
@@ -29,10 +30,7 @@ export class InputProcessor {
   };
 
   _buildOutputRows = (cleanedRows: string[]): string[] => {
-    const gapKey = "GAP";
-
     // Used to validate that the time ranges have no gaps/overlaps.
-    let previousEndTimeInMinutes: number | null = null;
 
     for (const currentRow of cleanedRows) {
       let parsed = new ParsedRow(currentRow);
@@ -44,59 +42,78 @@ export class InputProcessor {
         break;
       }
 
-      /**
-       * NOTE: The type casts here are a legitimate code smell
-       * (implying a TODO of eradication),
-       * but non-null error-field ensures that
-       * the actual data fields are not null.
-       */
-
-      // Shorthand to avoid repeated access
-      const startTimeInMinutes = parsed.startTimeInMinutes as number;
-
-      let hasGap = false;
-      let hasOverlap = false;
-
-      // Do not run validation of consecutive intervals on first iteration.
-      if (previousEndTimeInMinutes !== null) {
-        const startTimeString = minutesToTimeString(startTimeInMinutes);
-        const previousEndTimeString = minutesToTimeString(
-          previousEndTimeInMinutes
-        );
-        hasOverlap = startTimeInMinutes < previousEndTimeInMinutes;
-        hasGap = startTimeInMinutes > previousEndTimeInMinutes;
-
-        if (hasOverlap) {
-          // We assume that the error is in the current start time, fix that and
-          // inform the user in the output.
-
-          const overlapReplacedMessage = `NOTE: STARTING TIME CHANGED FROM ${startTimeString} TO ${previousEndTimeString} DUE TO OVERLAPS`;
-          const endTimeString = minutesToTimeString(
-            parsed.endTimeInMinutes as number
-          );
-
-          const fixedRow = `${previousEndTimeString}-${endTimeString} ${parsed.key}`;
-
-          // Override parsed so we can _insertRow() as usual.
-          parsed = new ParsedRow(fixedRow);
-          parsed.note = overlapReplacedMessage;
-        } else if (hasGap) {
-          // Generate a gap row that is added in the output rows
-          // between the previous row and the current row.
-          const gapRow = `${previousEndTimeString}-${startTimeString} ${gapKey}`;
-
-          const parsedGap = new ParsedRow(gapRow);
-
-          this._insertRow(parsedGap);
-        }
-      }
-
-      previousEndTimeInMinutes = parsed.endTimeInMinutes;
+      // Note that parsed can be overridden due to overlap-fixing.
+      parsed = this._ensureConsecutiveIntervals(parsed);
+      this.#previousEndTimeInMinutes = parsed.endTimeInMinutes;
 
       this._insertRow(parsed);
     }
 
     return this.#outputRows;
+  };
+
+  _ensureConsecutiveIntervals = (parsed: ParsedRow): ParsedRow => {
+    // Do not run validation of consecutive intervals on first iteration.
+    if (this.#previousEndTimeInMinutes === null) {
+      return parsed;
+    }
+
+    // Shorthand to avoid repeated access.
+    // TODO: fix type cast.
+    const startTimeInMinutes = parsed.startTimeInMinutes as number;
+
+    let hasGap = false;
+    let hasOverlap = false;
+
+    const startTimeString = minutesToTimeString(startTimeInMinutes);
+    const previousEndTimeString = minutesToTimeString(
+      this.#previousEndTimeInMinutes
+    );
+
+    hasOverlap = startTimeInMinutes < this.#previousEndTimeInMinutes;
+    hasGap = startTimeInMinutes > this.#previousEndTimeInMinutes;
+
+    if (hasOverlap) {
+      // Note that parsed is overridden here.
+      parsed = this._fixOverlap(parsed, previousEndTimeString, startTimeString);
+    } else if (hasGap) {
+      this._fixGap(previousEndTimeString, startTimeString);
+    }
+
+    return parsed;
+  };
+
+  _fixOverlap = (
+    parsed: ParsedRow,
+    previousEndTimeString: string,
+    startTimeString: string
+  ): ParsedRow => {
+    // We assume that the error is in the current start time, fix that and
+    // inform the user in the output.
+
+    const overlapReplacedMessage = `NOTE: STARTING TIME CHANGED FROM ${startTimeString} TO ${previousEndTimeString} DUE TO OVERLAPS`;
+    // TODO: fix type cast.
+    const endTimeString = minutesToTimeString(
+      parsed.endTimeInMinutes as number
+    );
+
+    const fixedRow = `${previousEndTimeString}-${endTimeString} ${parsed.key}`;
+
+    // Override parsed so we can _insertRow() as usual in the main loop.
+    parsed = new ParsedRow(fixedRow);
+    parsed.note = overlapReplacedMessage;
+    return parsed;
+  };
+
+  _fixGap = (previousEndTimeString: string, startTimeString: string): void => {
+    const gapKey = "GAP";
+    // Generate a gap row that is added in the output rows
+    // between the previous row and the current row.
+    const gapRow = `${previousEndTimeString}-${startTimeString} ${gapKey}`;
+
+    const parsedGap = new ParsedRow(gapRow);
+
+    this._insertRow(parsedGap);
   };
 
   /**
