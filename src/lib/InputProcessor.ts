@@ -159,7 +159,7 @@ export class InputProcessor {
   _buildOutputString = (outputRows: string[]): string => {
     const joinedOutputRows = `${outputRows.join("\n")}`;
     const joinedTotalRows = `${this.#minuteSums.getSumRows().join("\n")}`;
-    const totalsString = `TOTALS: ${joinedTotalRows}`;
+    const totalsString = `TOTALS:\n${joinedTotalRows}`;
     const lunchlessTotalString = `TOTAL TIME: ${minutesToTimeString(
       this.#minuteSums.getLunchlessMinutes()
     )}`;
