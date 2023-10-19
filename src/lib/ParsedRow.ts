@@ -3,6 +3,7 @@ import { space, timeStringToMinutes, type timeString } from "./utils";
 export class ParsedRow {
   row: string;
   key: string;
+  note: string | null = null;
   startTimeInMinutes: number;
   endTimeInMinutes: number;
   durationInMinutes: number;

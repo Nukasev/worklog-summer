@@ -26,7 +26,7 @@
 
 <style>
   textarea {
-    min-width: 600px;
+    min-width: 900px;
     width: 100%;
     height: 350px;
     resize: none;

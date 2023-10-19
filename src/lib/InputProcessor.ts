@@ -24,13 +24,7 @@ export class InputProcessor {
 
     const outputRows = this._buildOutputRows(cleanedRows);
 
-    const outputText = `${outputRows.join("\n")}\n\nTOTALS:\n${this.#minuteSums
-      .getSumRows()
-      .join("\n")}\n\nTOTAL TIME: ${minutesToTimeString(
-      this.#minuteSums.getLunchlessMinutes()
-    )}\nWITH LUNCH: ${minutesToTimeString(this.#minuteSums.getTotalMinutes())}`;
-
-    return outputText;
+    return this._buildOutputString(outputRows);
   };
 
   _buildOutputRows = (cleanedRows: string[]): string[] => {
@@ -43,7 +37,7 @@ export class InputProcessor {
     let previousEndTimeInMinutes: number | null = null;
 
     for (const currentRow of cleanedRows) {
-      const parsed = new ParsedRow(currentRow);
+      let parsed = new ParsedRow(currentRow);
 
       // Shorthand to avoid repeated access
       const startTimeInMinutes = parsed.startTimeInMinutes;
@@ -58,7 +52,22 @@ export class InputProcessor {
 
         if (hasOverlap) {
           hasOverlaps = true;
-          // TODO: error handling
+
+          // We assume that the error is in the current start time, fix that and
+          // inform the user in the output.
+          const overlapReplacedMessage = `NOTE: STARTING TIME CHANGED FROM ${minutesToTimeString(
+            parsed.startTimeInMinutes
+          )} TO ${minutesToTimeString(
+            previousEndTimeInMinutes
+          )} DUE TO OVERLAPS`;
+
+          const fixedRow = `${minutesToTimeString(
+            previousEndTimeInMinutes
+          )}-${minutesToTimeString(parsed.endTimeInMinutes)} ${parsed.key}`;
+
+          // Override parsed so we can _insertRow() as usual.
+          parsed = new ParsedRow(fixedRow);
+          parsed.note = overlapReplacedMessage;
         } else if (hasGap) {
           hasGaps = true;
           // Generate a gap row that is added in the output rows
@@ -94,8 +103,34 @@ export class InputProcessor {
   };
 
   _buildOutputRowString = (parsed: ParsedRow): string => {
-    return `${parsed.row} DURATION: ${minutesToTimeString(
+    const durationString = `DURATION: ${minutesToTimeString(
       parsed.durationInMinutes
-    )} CUMULATIVE: ${minutesToTimeString(this.#minuteSums.get(parsed.key))}`;
+    )}`;
+
+    const cumulativeString = `CUMULATIVE: ${minutesToTimeString(
+      this.#minuteSums.get(parsed.key)
+    )}`;
+
+    const baseString = `${parsed.row} ${durationString} ${cumulativeString}`;
+
+    const noteSuffix = parsed.note !== null ? `${space}${parsed.note}` : "";
+
+    return `${baseString}${noteSuffix}`;
+  };
+
+  _buildOutputString = (outputRows: string[]): string => {
+    const joinedOutputRows = `${outputRows.join("\n")}`;
+    const joinedTotalRows = `${this.#minuteSums.getSumRows().join("\n")}`;
+    const totalsString = `TOTALS: ${joinedTotalRows}`;
+    const lunchlessTotalString = `TOTAL TIME: ${minutesToTimeString(
+      this.#minuteSums.getLunchlessMinutes()
+    )}`;
+    const totalString = `WITH LUNCH: ${minutesToTimeString(
+      this.#minuteSums.getTotalMinutes()
+    )}`;
+
+    const outputText = `${joinedOutputRows}\n\n\n${totalsString}\n\n${lunchlessTotalString}\n${totalString}`;
+
+    return outputText;
   };
 }
