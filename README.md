@@ -1,3 +1,7 @@
+# Backstory:
+
+This is a simple browser-based tool for summing work hour logs into item-wise hour totals, originally made as part of Anders Innovations hackathon taking place in October 2023. The assignment was to create a work- or hobby-related tool with technology that one is not familiar with or has not worked with for a long time. Svelte and (frontend development in general) filled this need at the time, even though the role of Svelte ended up being quite small compared to the heavy lifting that typescript (:heart:) is doing with the input-processing logic.
+
 # Obligatory legalese boilerplate:
 
 See the LICENSE-file.
