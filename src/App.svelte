@@ -1,47 +1,42 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import Instructions from "./Instructions.svelte";
+  import { InputProcessor } from "./lib/InputProcessor";
+
+  let inputText: string = "Place input here.";
+  let outputText: string = "Output will appear here.";
+
+  const processInput = (): void => {
+    const inputProcessor = new InputProcessor(inputText);
+    outputText = inputProcessor.process();
+  };
 </script>
 
 <main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
+  <Instructions />
+
+  <div id="input-area">
+    <textarea id="input-textarea" bind:value={inputText} />
   </div>
-  <h1>Vite + Svelte</h1>
 
   <div class="card">
-    <Counter />
+    <button on:click={processInput}> Process input </button>
   </div>
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+  <div id="output-area">
+    <textarea id="output-textarea" bind:value={outputText} />
+  </div>
 </main>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
+  textarea {
+    min-width: 900px;
+    width: 100%;
+    resize: none;
   }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
+  #input-textarea {
+    height: 250px;
   }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
+  #output-textarea {
+    height: 350px;
   }
 </style>
